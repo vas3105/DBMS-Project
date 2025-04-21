@@ -1,0 +1,174 @@
+﻿@page "/BankDetails"
+@using DBMSproj.Services
+@rendermode InteractiveServer
+@inject BankDetailsService bankDetailsService
+<PageTitle>Bank Details</PageTitle>
+
+<style>
+    .container {
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    text-align: center;
+    }
+
+    .form-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    }
+
+    label {
+    font-weight: bold;
+    flex: 1;
+    text-align: left;
+    }
+
+    .form-control {
+    flex: 2;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+    }
+
+    .icon-container {
+    text-align: center;
+    margin-bottom: 15px;
+    }
+
+    .icon {
+    font-size: 50px;
+    }
+
+    .edit-icon {
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+    }
+
+    .edit-icon:hover {
+    color: #007bff;
+    }
+
+    .header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    }
+
+    .header-container h2 {
+    margin: 0;
+    }
+
+    .submit-btn {
+    margin-top: 20px;
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    }
+
+    .submit-btn:hover {
+    background-color: #45a049;
+    }
+
+    .confirmation {
+    margin-top: 15px;
+    color: green;
+    font-weight: bold;
+    }
+</style>
+
+<div class="container">
+    <div class="icon-container">
+        <span class="icon">👤</span>
+    </div>
+
+    <div class="form-group">
+        <label>Employee ID:</label>
+        <input type="text" class="form-control" @bind="EmployeeId" disabled="@IsReadOnly" />
+    </div>
+
+    <!--<div class="header-container">
+    <h2>Bank Details</h2>
+    <span class="edit-icon" @onclick="ToggleEditMode">✏️</span>
+    </div>-->
+
+    <div class="form-group">
+        <label>Account Holder Name:</label>
+        <input type="text" class="form-control" @bind="Bank_Details.AccountHolderName" disabled="@IsReadOnly" />
+    </div>
+
+    <div class="form-group">
+        <label>Account Number:</label>
+        <input type="text" class="form-control" @bind="Bank_Details.AccountNumber" disabled="@IsReadOnly" />
+    </div>
+
+    <div class="form-group">
+        <label>IFSC CODE:</label>
+        <input type="text" class="form-control" @bind="Bank_Details.IFSCCode" disabled="@IsReadOnly" />
+    </div>
+
+    <div class="form-group">
+        <label>Bank Name:</label>
+        <input type="text" class="form-control" @bind="Bank_Details.BankName" disabled="@IsReadOnly" />
+    </div>
+
+    <div class="form-group">
+        <label>Branch:</label>
+        <input type="text" class="form-control" @bind="Bank_Details.Branch" disabled="@IsReadOnly" />
+    </div>
+
+    <!--  <button class="submit-btn" @onclick="SubmitForm" disabled="@IsReadOnly">Submit</button>
+
+    @if (ShowConfirmation)
+    {
+    <p class="confirmation">Bank details submitted successfully</p>
+    }-->
+</div>
+
+@code {
+    private  string EmployeeId = "101";
+    //public string EmployeeId { get; set; } = "";
+
+    public BankInfo Bank_Details { get; set; } = new BankInfo();
+
+    private bool IsReadOnly { get; set; } = true;
+    private bool ShowConfirmation { get; set; } = false;
+
+    /*private void ToggleEditMode()
+    {
+        IsReadOnly = !IsReadOnly;
+    }
+
+    private async Task SubmitForm()
+    {
+        if (int.TryParse(EmployeeId, out int empId))
+        {
+            await bankDetailsService.InsertOrUpdateBankDetailsAsync(empId, Bank_Details);
+            ShowConfirmation = true;
+            IsReadOnly = true;
+            }
+        }*/
+
+    protected override async Task OnInitializedAsync()
+    {
+    int empID = 101; //fix it later
+    if (int.TryParse(EmployeeId, out int empId))
+    {
+        
+        var details = await bankDetailsService.GetBankDetailsAsync(empId);
+            if (details != null)
+            {
+                Bank_Details = details;
+            }
+        }
+    }
+}

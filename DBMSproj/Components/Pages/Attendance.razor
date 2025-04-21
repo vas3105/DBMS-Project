@@ -1,0 +1,153 @@
+﻿@page "/attendance"
+@using System.Text
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@using DBMSproj.Services
+@inject AttendanceService attendanceService
+
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f9fc;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 70%;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-section, .attendance-section, .leave-section {
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        color: #333333;
+        margin-bottom: 15px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table, th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+
+    th {
+        background-color: #f4f4f4;
+        text-align: left;
+    }
+
+    form label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    form input, button {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+<div class="container">
+    <!-- Profile Section -->
+    <div class="profile-section">
+        <label>Employee ID:</label>
+        <input type="text" id="employeeId" name="employeeId" readonly>
+    </div>
+
+    <!-- Attendance Section -->
+    <div class="attendance-section">
+        <h2>Attendance</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Attendance ID</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var record in AttendanceRecords)
+                {
+                    <tr>
+                        <td>@record.Atid</td>        
+                        <td>@record.ADate.ToShortDateString()</td>
+                        <td>@record.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+
+    <!-- Leave Application Section -->
+    <div class="leave-section">
+        <h2>Apply Leave</h2>
+        <EditForm Model="@LeaveApplication" OnValidSubmit="SubmitLeave">
+            <label for="startDate">Start Date:</label>
+            <InputDate id="startDate" @bind-Value="LeaveApplication.StartDate" class="form-control" />
+
+            <label for="endDate">End Date:</label>
+            <InputDate id="endDate" @bind-Value="LeaveApplication.EndDate" class="form-control" />
+
+            <label for="type">Type:</label>
+            <InputText id="type" @bind-Value="LeaveApplication.Type" class="form-control" />
+
+            <!-- Display Status (Read-only) -->
+            <label for="status">Status:</label>
+            <InputText id="status" @bind-Value="LeaveApplication.Status" class="form-control" readonly />
+
+            <button type="submit">Apply Leave</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    @code {
+        private int employeeId = 101; // your test employee ID
+
+        private List<AttendanceRecord> AttendanceRecords = new List<AttendanceRecord>();
+        private LeaveApplication LeaveApplication = new LeaveApplication
+        {
+            Status = "Waiting"
+        };
+
+        protected override async Task OnInitializedAsync()
+        {
+            AttendanceRecords = await attendanceService.GetAttendanceRecordsAsync(employeeId);
+        }
+
+        private async Task SubmitLeave()
+        {
+            LeaveApplication.EmpId = employeeId;  // Must set EmpId
+            await attendanceService.AddLeaveApplicationAsync(LeaveApplication);
+            LeaveApplication = new LeaveApplication { Status = "Waiting" };
+        }
+    }
+
+
+
+}
