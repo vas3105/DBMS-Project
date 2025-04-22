@@ -30,7 +30,6 @@ public class Program
         builder.Services.AddScoped<PayslipService>();
         //Register EmployeeStateService
         builder.Services.AddScoped<EmployeeStateService>();
-
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

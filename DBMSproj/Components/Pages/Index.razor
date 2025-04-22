@@ -1,0 +1,16 @@
+﻿@page "/"
+@inject EmployeeStateService EmployeeState
+@inject NavigationManager Navigation
+
+@if (string.IsNullOrEmpty(EmployeeState.EmployeeId))
+{
+    <p>Redirecting to login...</p>
+    {
+        Navigation.NavigateTo("/login");
+    }
+}
+else
+{
+    <h1>Welcome Employee @EmployeeState.EmployeeId</h1>
+    Navigation.NavigateTo("/EmployePage");
+}

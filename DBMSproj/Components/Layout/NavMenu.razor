@@ -1,4 +1,5 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager Navigation
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Employee</a>
     </div>
@@ -10,38 +11,61 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link d-flex align-items-center" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill fs-5 me-2"></span>
+               
                 <span>Home</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link d-flex align-items-center" href="Taxes">
-                <span class="bi bi-cash-coin fs-5 me-2"></span>
+               
                 <span>Taxes</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link d-flex align-items-center" href="Attendance">
-                <span class="bi bi-cloud-sun-fill fs-5 me-2"></span>
+                
                 <span>Attendance</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link d-flex align-items-center" href="BankDetails">
-                <span class="bi bi-bank2 fs-5 me-2"></span>
+                
                 <span>Bank Details</span>
             </NavLink>
         </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link d-flex align-items-center" href="PayslipPage">
-                <span class="bi bi-cash-stack fs-5 me-2"></span>
+               
                 <span>Payslip</span>
             </NavLink>
         </div>
+        <button style="background: #dc3545;
+    color: white;
+    border-radius: 0.5em;
+    width: 5em;
+    margin-left: 2em;" @onclick="Logout">
+            Logout
+        </button>
 
+        @code {
+            [Inject]
+            private NavigationManager Navigations { get; set; }
+
+            [Inject]
+            private EmployeeStateService EmployeeState { get; set; }
+
+            private void Logout()
+            {
+                // Clear the employee ID
+                EmployeeState.EmployeeId = string.Empty;
+
+                // Navigate to login page
+                Navigations.NavigateTo("/login");
+            }
+        }
        
     </nav>
 </div>
