@@ -23,10 +23,12 @@ namespace DBMSproj.Services
 
         public async Task AddLeaveApplicationAsync(LeaveApplication leave)
         {
+            var random = new Random();
+            leave.Leaveid = random.Next(80000, 90001);
             using var connection = new SqlConnection(_connectionString);
 
-            var query = @"INSERT INTO Leave (EmpId, StartDate, EndDate, Type,  Status)
-                          VALUES (@EmpId, @StartDate, @EndDate, @Type, @Status)";
+            var query = @"INSERT INTO Leave (Leaveid,EmpId, Start_date, End_date, type,  Status)
+                          VALUES (@Leaveid, @empid, @Start_date, @End_date, @type, @Status)";
 
             await connection.ExecuteAsync(query, leave);
         }
@@ -41,10 +43,11 @@ namespace DBMSproj.Services
 
     public class LeaveApplication
     {
+        public int Leaveid { get; set; }
         public int EmpId { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public string Type { get; set; }
+        public DateTime Start_date { get; set; }
+        public DateTime End_date { get; set; }
+        public string type { get; set; }
         public string Reason { get; set; }
         public string Status { get; set; }
     }

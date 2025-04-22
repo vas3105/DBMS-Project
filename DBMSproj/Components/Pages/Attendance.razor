@@ -5,7 +5,8 @@
 @using DBMSproj.Services
 @inject AttendanceService attendanceService
 @inject EmployeeStateService EmployeeState
-
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
 
 <style>
     body {
@@ -103,34 +104,36 @@
         </table>
 
     </div>
-
-    <!-- Leave Application Section -->
-    @* <div class="leave-section">
+    <div class="leave-section">
         <h2>Apply Leave</h2>
-        <EditForm Model="@LeaveApplication" OnValidSubmit="SubmitLeave">
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div style="color: green; margin-bottom: 10px;">@successMessage</div>
+        }
+
+        <EditForm Model="@leaveApplication" OnValidSubmit="SubmitLeave">
             <label for="startDate">Start Date:</label>
-            <InputDate id="startDate" @bind-Value="LeaveApplication.StartDate" class="form-control" />
+            <InputDate id="startDate" @bind-Value="leaveApplication.Start_date" class="form-control" />
 
             <label for="endDate">End Date:</label>
-            <InputDate id="endDate" @bind-Value="LeaveApplication.EndDate" class="form-control" />
+            <InputDate id="endDate" @bind-Value="leaveApplication.End_date" class="form-control" />
 
             <label for="type">Type:</label>
-            <InputText id="type" @bind-Value="LeaveApplication.Type" class="form-control" />
+            <InputText id="type" @bind-Value="leaveApplication.type" class="form-control" />
 
             <!-- Display Status (Read-only) -->
             <label for="status">Status:</label>
-            <InputText id="status" @bind-Value="LeaveApplication.Status" class="form-control" readonly />
+            <InputText id="status" @bind-Value="leaveApplication.Status" class="form-control" readonly />
 
             <button type="submit">Apply Leave</button>
         </EditForm>
-    </div> *@
+    </div>
 </div>
-
 @code {
         private int employeeId;
         private List<AttendanceRecord> attendanceRecords = new();
-        private LeaveApplication leaveApplication = new() { Status = "Waiting" };
-
+        private LeaveApplication leaveApplication = new() { Status = "Pending" };
+        private string? successMessage;
         protected override async Task OnInitializedAsync()
         {
             // Subscribe to employee state changes
@@ -139,12 +142,22 @@
             // Get initial employee ID
             await SetEmployeeFromState();
         }
-        // private async Task SubmitLeave()
-        // {
-        //     LeaveApplication.EmpId = employeeId;  // Must set EmpId
-        //     await attendanceService.AddLeaveApplicationAsync(LeaveApplication);
-        //     LeaveApplication = new LeaveApplication { Status = "Waiting" };
-        // }
+        private async Task SubmitLeave()
+        {
+        leaveApplication.EmpId = employeeId;
+
+        try
+        {
+            await attendanceService.AddLeaveApplicationAsync(leaveApplication);
+            successMessage = "Leave application submitted successfully!";
+        }
+        catch (Exception ex)
+        {
+            successMessage = $"Failed to submit leave: {ex.Message}";
+        }
+
+        leaveApplication = new LeaveApplication { Status = "Pending" };
+        }
         private async Task SetEmployeeFromState()
         {
             if (int.TryParse(EmployeeState.EmployeeId, out int parsedId))
