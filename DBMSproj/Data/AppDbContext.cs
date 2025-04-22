@@ -1,6 +1,5 @@
 ﻿using DBMSproj.Components.Pages;
 using Microsoft.EntityFrameworkCore;
-
 namespace DBMSproj.Data 
 {
     public class AppDbContext : DbContext
@@ -14,5 +13,6 @@ namespace DBMSproj.Data
         public DbSet<Employepage> Employee { get; set; }
         public DbSet <Taxes> Taxes { get; set; }
         public DbSet<PayslipPage> Payslip { get; set; }
+       
     }
 }

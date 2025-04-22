@@ -4,71 +4,72 @@
 @inject IJSRuntime JS
 @using DBMSproj.Services
 @inject AttendanceService attendanceService
+@inject EmployeeStateService EmployeeState
 
 
 <style>
     body {
-        font-family: Arial, sans-serif;
-        background-color: #f7f9fc;
-        margin: 0;
-        padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f7f9fc;
+    margin: 0;
+    padding: 0;
     }
 
     .container {
-        width: 70%;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #ffffff;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 70%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .profile-section, .attendance-section, .leave-section {
-        margin-bottom: 20px;
+    margin-bottom: 20px;
     }
 
     h2 {
-        color: #333333;
-        margin-bottom: 15px;
+    color: #333333;
+    margin-bottom: 15px;
     }
 
     table {
-        width: 100%;
-        border-collapse: collapse;
+    width: 100%;
+    border-collapse: collapse;
     }
 
     table, th, td {
-        border: 1px solid #ddd;
-        padding: 10px;
+    border: 1px solid #ddd;
+    padding: 10px;
     }
 
     th {
-        background-color: #f4f4f4;
-        text-align: left;
+    background-color: #f4f4f4;
+    text-align: left;
     }
 
     form label {
-        display: block;
-        margin-bottom: 5px;
+    display: block;
+    margin-bottom: 5px;
     }
 
     form input, button {
-        width: 100%;
-        margin-bottom: 10px;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     }
 
     button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
     }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+    button:hover {
+    background-color: #0056b3;
+    }
 </style>
 
 <div class="container">
@@ -90,7 +91,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var record in AttendanceRecords)
+                @foreach (var record in attendanceRecords)
                 {
                     <tr>
                         <td>@record.Atid</td>        
@@ -126,27 +127,47 @@
 </div>
 
 @code {
-    @code {
-        private int employeeId = 101; // your test employee ID
-
-        private List<AttendanceRecord> AttendanceRecords = new List<AttendanceRecord>();
-        private LeaveApplication LeaveApplication = new LeaveApplication
-        {
-            Status = "Waiting"
-        };
+        private int employeeId;
+        private List<AttendanceRecord> attendanceRecords = new();
+        private LeaveApplication leaveApplication = new() { Status = "Waiting" };
 
         protected override async Task OnInitializedAsync()
         {
-            AttendanceRecords = await attendanceService.GetAttendanceRecordsAsync(employeeId);
-        }
+            // Subscribe to employee state changes
+            EmployeeState.OnChange += HandleEmployeeChanged;
 
+            // Get initial employee ID
+            await SetEmployeeFromState();
+        }
         // private async Task SubmitLeave()
         // {
         //     LeaveApplication.EmpId = employeeId;  // Must set EmpId
         //     await attendanceService.AddLeaveApplicationAsync(LeaveApplication);
         //     LeaveApplication = new LeaveApplication { Status = "Waiting" };
         // }
-    }
+        private async Task SetEmployeeFromState()
+        {
+            if (int.TryParse(EmployeeState.EmployeeId, out int parsedId))
+            {
+                employeeId = parsedId;
+                await LoadEmployeeData();
+            }
+        }
+        private async Task LoadEmployeeData()
+        {
+            attendanceRecords = await attendanceService.GetAttendanceRecordsAsync(employeeId);
+            StateHasChanged(); // Refresh UI
+        }
+
+        private async void HandleEmployeeChanged()
+        {
+            await SetEmployeeFromState();
+        }
+
+        public void Dispose()
+        {
+            EmployeeState.OnChange -= HandleEmployeeChanged;
+        }
 
 
 

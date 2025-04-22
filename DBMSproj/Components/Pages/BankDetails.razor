@@ -2,6 +2,7 @@
 @using DBMSproj.Services
 @rendermode InteractiveServer
 @inject BankDetailsService bankDetailsService
+@inject EmployeeStateService EmployeeState
 <PageTitle>Bank Details</PageTitle>
 
 <style>
@@ -93,7 +94,7 @@
 
     <div class="form-group">
         <label>Employee ID:</label>
-        <input type="text" class="form-control" @bind="EmployeeId" disabled="@IsReadOnly" />
+        <input type="text" class="form-control" value="@EmployeeId" disabled />
     </div>
 
     <!--<div class="header-container">
@@ -125,50 +126,40 @@
         <label>Branch:</label>
         <input type="text" class="form-control" @bind="Bank_Details.Branch" disabled="@IsReadOnly" />
     </div>
-
-    <!--  <button class="submit-btn" @onclick="SubmitForm" disabled="@IsReadOnly">Submit</button>
-
-    @if (ShowConfirmation)
-    {
-    <p class="confirmation">Bank details submitted successfully</p>
-    }-->
 </div>
 
 @code {
-    private  string EmployeeId = "101";
-    //public string EmployeeId { get; set; } = "";
-
+    
     public BankInfo Bank_Details { get; set; } = new BankInfo();
-
     private bool IsReadOnly { get; set; } = true;
     private bool ShowConfirmation { get; set; } = false;
-
-    /*private void ToggleEditMode()
-    {
-        IsReadOnly = !IsReadOnly;
-    }
-
-    private async Task SubmitForm()
-    {
-        if (int.TryParse(EmployeeId, out int empId))
-        {
-            await bankDetailsService.InsertOrUpdateBankDetailsAsync(empId, Bank_Details);
-            ShowConfirmation = true;
-            IsReadOnly = true;
-            }
-        }*/
+    private string EmployeeId => EmployeeState.EmployeeId;
 
     protected override async Task OnInitializedAsync()
     {
-    int empID = 101; //fix it later
-    if (int.TryParse(EmployeeId, out int empId))
-    {
         
-        var details = await bankDetailsService.GetBankDetailsAsync(empId);
+        EmployeeState.OnChange += HandleEmployeeChange;
+        await LoadBankDetails();
+    }
+    private async Task LoadBankDetails()
+    {
+        if (!string.IsNullOrEmpty(EmployeeId) && int.TryParse(EmployeeId, out int empId))
+        {
+            var details = await bankDetailsService.GetBankDetailsAsync(empId);
             if (details != null)
             {
                 Bank_Details = details;
+                StateHasChanged();
             }
         }
+    }
+    private async void HandleEmployeeChange()
+    {
+        await LoadBankDetails();
+    }
+
+    public void Dispose()
+    {
+        EmployeeState.OnChange -= StateHasChanged;
     }
 }

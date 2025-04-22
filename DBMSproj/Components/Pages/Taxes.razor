@@ -6,69 +6,71 @@
 @using DBMSproj.Models
 @inject TaxesService TaxService
 @inject IJSRuntime JS
+@inject EmployeeStateService EmployeeState
+@implements IDisposable
 
 <PageTitle>Tax Details</PageTitle>
 
 <style>
     .container {
-    max-width: 700px;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background-color: #f9f9f9;
-    text-align: center;
+        max-width: 700px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        text-align: center;
     }
 
     .form-group {
-    margin-bottom: 15px;
+        margin-bottom: 15px;
     }
 
     label {
-    font-weight: bold;
+        font-weight: bold;
     }
 
     .form-control {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    width: 100%;
+        padding: 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        width: 100%;
     }
 
     .icon-container {
-    text-align: center;
-    margin-bottom: 15px;
+        text-align: center;
+        margin-bottom: 15px;
     }
 
     .icon {
-    font-size: 50px;
+        font-size: 50px;
     }
 
     .tax-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
     }
 
-    .tax-table th, .tax-table td {
-    border: 1px solid #000;
-    padding: 10px;
-    text-align: center;
-    }
+        .tax-table th, .tax-table td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+        }
 
     .download-btn {
-    margin-top: 15px;
-    padding: 10px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+        margin-top: 15px;
+        padding: 10px 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
     }
 
-    .download-btn:hover {
-    background-color: #45a049;
-    }
+        .download-btn:hover {
+            background-color: #45a049;
+        }
 </style>
 
 <div class="container">
@@ -78,70 +80,113 @@
 
     <div class="form-group">
         <label>Employee ID:</label>
-        <input type="text" class="form-control" @bind="EmployeeId" readonly />
+        <input type="text" class="form-control" value="@EmployeeId" readonly />
         <button class="download-btn" @onclick="LoadTaxDetails">Load Tax Details</button>
     </div>
-   
+
     <h2>Tax Breakdown</h2>
 
-    <table class="tax-table">
-        <thead>
-            <tr>
-                <th>Month</th>
-                <th>Basic Pay</th>
-                <th>TDS</th>
-                <th>Professional Tax</th>
-                <th>Provident Fund</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (int i = 0; i < TaxDetails.Count; i++)
-            {
+    @if (isLoading)
+    {
+        <p>Loading tax details...</p>
+    }
+    else if (TaxDetails.Count > 0)
+    {
+        <table class="tax-table">
+            <thead>
                 <tr>
-                    <td><input type="text" class="form-control" @bind="TaxDetails[i].Month" /></td>
-                    <td><input type="text" class="form-control" @bind="TaxDetails[i].BasicPay" /></td>
-                    <td><input type="text" class="form-control" @bind="TaxDetails[i].TDS" /></td>
-                    <td><input type="text" class="form-control" @bind="TaxDetails[i].ProfessionalTax" /></td>
-                    <td><input type="text" class="form-control" @bind="TaxDetails[i].ProvidentFund" /></td>
+                    <th>Month</th>
+                    <th>Basic Pay</th>
+                    <th>TDS</th>
+                    <th>Professional Tax</th>
+                    <th>Provident Fund</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var tax in TaxDetails)
+                {
+                    <tr>
+                        <td>@tax.Month</td>
+                        <td>@tax.BasicPay.ToString("C")</td>
+                        <td>@tax.TDS.ToString("C")</td>
+                        <td>@tax.ProfessionalTax.ToString("C")</td>
+                        <td>@tax.ProvidentFund.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-    <button class="download-btn" @onclick="DownloadTaxDetails">Download</button>
+        <button class="download-btn" @onclick="DownloadTaxDetails">Download</button>
+    }
+    else
+    {
+        <p>No tax details found for this employee.</p>
+    }
 </div>
-<script src="js/site.js"></script>
 
 @code {
-    //public string EmployeeId { get; set; } = "";
-    string EmployeeId ="101";
-    public List<TaxDetail> TaxDetails { get; set; } = new();
+    private List<TaxDetail> TaxDetails { get; set; } = new();
+    private bool isLoading = false;
+    private string EmployeeId => EmployeeState.EmployeeId;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to employee changes
+        EmployeeState.OnChange += HandleEmployeeChanged;
+    }
 
     private async Task LoadTaxDetails()
     {
-        if (int.TryParse(EmployeeId, out int empId))
+        if (string.IsNullOrEmpty(EmployeeId)) return;
+
+        try
         {
-            TaxDetails = await TaxService.GetTaxDetailsByEmployeeIdAsync(empId);
+            isLoading = true;
+            StateHasChanged();
+
+            if (int.TryParse(EmployeeId, out int empId))
+            {
+                TaxDetails = await TaxService.GetTaxDetailsByEmployeeIdAsync(empId);
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
         }
     }
 
+    private async void HandleEmployeeChanged()
+    {
+        await LoadTaxDetails();
+    }
 
     private async Task DownloadTaxDetails()
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("Month,Basic Pay,TDS,Professional Tax,Provident Fund");
-
-        foreach (var tax in TaxDetails)
+        try
         {
-            sb.AppendLine($"{tax.Month},{tax.BasicPay},{tax.TDS},{tax.ProfessionalTax},{tax.ProvidentFund}");
+            var sb = new StringBuilder();
+            sb.AppendLine("Month,Basic Pay,TDS,Professional Tax,Provident Fund");
+
+            foreach (var tax in TaxDetails)
+            {
+                sb.AppendLine($"{tax.Month},{tax.BasicPay},{tax.TDS},{tax.ProfessionalTax},{tax.ProvidentFund}");
+            }
+
+            var fileName = $"TaxDetails_{EmployeeId}.csv";
+            var fileContent = Encoding.UTF8.GetBytes(sb.ToString());
+            var fileBase64 = Convert.ToBase64String(fileContent);
+
+            await JS.InvokeVoidAsync("BlazorDownloadFile", fileName, fileBase64);
         }
-
-        var fileName = "TaxDetails.csv";
-        var fileContent = Encoding.UTF8.GetBytes(sb.ToString());
-        var fileBase64 = Convert.ToBase64String(fileContent);
-
-        await JS.InvokeVoidAsync("BlazorDownloadFile", fileName, fileBase64);
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error downloading file: {ex.Message}");
+        }
     }
 
-    
+    public void Dispose()
+    {
+        EmployeeState.OnChange -= HandleEmployeeChanged;
+    }
 }
