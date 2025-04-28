@@ -1,4 +1,5 @@
-PayFlow-Salary Management system  
+**PayFlow-Salary Management System**
+
 PayFlow is a web-based application built with the goal of improving transparency and trust in 
 organizational payroll processes. While many existing systems focus on automating complex salary 
 calculations and tax handling, this system takes a different approach. It emphasizes visibility and 
